@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script>
+        function countTotalDeposit(content, skipFirstLine) {
+            let names = new Map();
+            let lineIndex = 0;
+            content.split("\n")
+                .forEach(function (line) {
+                    if (lineIndex > 0 && line != null && line.trim().length > 0) {
+                        let array = line.split("\"\t\"");
+                        let date = array[0];
+                        let name = array[1];
+                        let type = array[2];
+                        let amount = 0;
+                        if (array[3] != null) {
+                            amount = array[3].trim().replace("\"", "");
+                        } else {
+                            console.error("Check it :", line)
+                        }
+                        if (names.has(name)) {
+                            names.set(name, Number.parseInt(names.get(name)) + Number.parseInt(amount));
+                        } else {
+                            names.set(name, amount);
+                        }
+                    }
+                    lineIndex++;
+                });
+            return names;
+        }
+
+        function countFameThisWeek(content, skipFirstLine) {
+            let names = new Map();
+            let lineIndex = 0;
+            content.split("\n")
+                .forEach(function (line) {
+                    console.log(">", line);
+                    if (lineIndex > 0 && line.trim().length > 0) {
+                        let array = line.split("\"\t\"");
+                        let date = array[0];
+                        let name = array[1];
+                        let type = array[2];
+                        let fame = array[3];
+                        let amount = fame.substring(0, fame.length - 1);
+
+                        if (names.has(name)) {
+                            names.set(name, Number.parseInt(names.get(name)) + Number.parseInt(amount));
+                        } else {
+                            names.set(name, amount);
+                        }
+                    }
+                    lineIndex++;
+                });
+            return names;
+        }
+
+        let names = countTotalDeposit();
+
+        names.forEach(function (items, key) {
+            console.info(key, ", ", items)
+        })
+
+        function doAnalysis() {
+            let _4weeks = document.getElementById("4weeks").value;
+            let _1weeks = document.getElementById("1weeks").value;
+            let _1weekFame = document.getElementById("1weekFame").value;
+
+            let _4weeksMap = countTotalDeposit(_4weeks, true);
+            let _1weeksMap = countTotalDeposit(_1weeks, true);
+            let _1weekFameMap = countFameThisWeek(_1weekFame, true);
+
+            console.log("_1weeksMap", _1weeksMap);
+            console.log("_4weeksMap", _4weeksMap);
+            console.log("_1weekFameMap", _1weekFameMap);
+
+            combineData(_1weeksMap, _4weeksMap, _1weekFameMap)
+        }
+
+        function combineData(_1weeksMap, _4weeksMap, _1weekFameMap) {
+            let table = document.getElementById("generated-table");
+            // Insert a row at the end of table
+            let elementsByClassName = document.querySelectorAll(".row_record");
+            console.log('elementsByClassName', elementsByClassName);
+
+            for (const element of elementsByClassName) {
+                element.remove();
+            }
+
+            _1weekFameMap.forEach(function (_fame, name) {
+                let lastWeekDonation = _1weeksMap.get(name) == null ? 0 : Number.parseInt(_1weeksMap.get(name));
+                let fourWeeksDonation = _4weeksMap.get(name) == null ? 0 : Number.parseInt(_4weeksMap.get(name));
+                let fame = Number.parseInt(_fame);
+
+                let newRow = table.insertRow();
+                newRow.classList.add("row_record")
+                // Insert a cell at the end of the row
+
+                let amountPerWeek = Number.parseInt(fourWeeksDonation) / 4;
+                let weeklyDonation = Number.parseInt(document.getElementById("weeklyDonation").value)
+                if (fame === 0) {
+                    newRow.classList.add("inactive")
+                } else if (lastWeekDonation >= weeklyDonation) {
+                    newRow.classList.add("ok")
+                } else {
+                    newRow.classList.add("check-me")
+                }
+
+                append(name);
+                append(fame);
+                append(fourWeeksDonation);
+                append(lastWeekDonation);
+                append(amountPerWeek);
+
+                function append(text) {
+                    // Append a text node to the cell
+                    let newCell = newRow.insertCell();
+                    let newText = document.createTextNode(text);
+                    newCell.appendChild(newText);
+                }
+
+            })
+        }
+    </script>
+    <style>
+
+        .column {
+            float: left;
+            padding-left: 5%;
+            width: 45%;
+        }
+
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        .center {
+            margin: auto;
+            width: 20%;
+            border: 3px solid green;
+            padding: 10px;
+        }
+
+        .button-like:hover {
+            color: green;
+            cursor: pointer;
+        }
+
+        .ok {
+            background: green;
+            color: white;
+        }
+
+        .inactive {
+            background: gray;
+            color: white;
+        }
+
+        .check-me {
+            background: orangered;
+            color: white;
+        }
+
+    </style>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="row">
+    <div class="column">
+        Last 4 weeks deposits
+        <textarea id="4weeks" name="4weeks" class="form-control t-area" rows="10"></textarea>
+    </div>
+
+    <div class="column">
+        Last 1 weeks deposits
+        <textarea id="1weeks" name="1weeks" class="form-control t-area" rows="10"></textarea>
+    </div>
+
+    <div class="column">
+        Fame last week
+        <textarea id="1weekFame" name="1weeks" class="form-control t-area" rows="10"></textarea>
+    </div>
+
+    <div class="column">
+        <label>Weekly donation
+            <hr>
+            <input id="weeklyDonation" type="text" class="form-control"
+                   placeholder="weekly donation, 500 000 (in silver)" value="500000">
+        </label>
+
+    </div>
+</div>
+<hr>
+<div class="center button-like" style="text-align: center" onclick="doAnalysis()">
+    Analyze
+</div>
+
+<hr>
+<table class="table" id="generated-table">
+    <tr>
+        <th>Player Name</th>
+        <th>Fame Received</th>
+        <th>Last 4 Weeks donations</th>
+        <th>Last Week donations</th>
+        <th>Average weekly donation</th>
+    </tr>
+
+</table>
+</body>
+</html>
